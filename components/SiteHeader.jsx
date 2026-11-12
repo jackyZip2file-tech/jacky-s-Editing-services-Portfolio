@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
 
@@ -32,7 +33,17 @@ export default function SiteHeader() {
       }`}
     >
       <div className="container-sharp flex h-[68px] items-center justify-between">
-        <a href="#top" className="focus-ring flex items-baseline gap-2">
+        <a href="#top" className="focus-ring group flex items-center gap-2.5">
+          <span className="relative block h-9 w-9 shrink-0 overflow-hidden rounded-full border border-ink bg-white ring-1 ring-gold-400/70 ring-offset-1 ring-offset-white">
+            <Image
+              src="/images/pfp.png"
+              alt="Jacky"
+              fill
+              sizes="36px"
+              priority
+              className="object-cover"
+            />
+          </span>
           <span className="font-display text-lg font-bold uppercase tracking-[0.18em] text-ink">
             Jacky
           </span>

@@ -37,6 +37,13 @@ export const metadata = {
     description:
       'Fast-paced trendy edits, meme compilations, clean tutorials and reference-driven recreations. Human-edited. Zero AI slop.',
     type: 'website',
+    images: ['/images/pfp.png'],
+  },
+  twitter: {
+    card: 'summary',
+    title: "Jacky — Video Editor & Visual Designer",
+    description: 'Human-edited video: trendy edits, memes, tutorials, reference recreations.',
+    images: ['/images/pfp.png'],
   },
 };
 

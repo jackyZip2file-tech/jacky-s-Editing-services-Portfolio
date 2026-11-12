@@ -27,13 +27,14 @@ export default function Toolkit() {
           {TOOLKIT.map((tool, index) => (
             <Reveal key={tool.name} delay={0.06 * index}>
               <article className="group flex h-full flex-col border border-ink bg-white transition-transform duration-300 ease-sharp hover:-translate-y-1 hover:shadow-sharp-sm">
-                <div className="relative aspect-[16/10] overflow-hidden border-b border-ink bg-ink">
+                <div className="relative aspect-[4/3] overflow-hidden border-b border-ink bg-white p-4">
                   <Image
                     src={tool.image}
                     alt={tool.name}
                     fill
                     sizes="(max-width: 640px) 100vw, 33vw"
-                    className="object-cover opacity-95 transition-transform duration-500 ease-sharp group-hover:scale-[1.04]"
+                    loading="eager"
+                    className="object-contain p-3 transition-transform duration-500 ease-sharp group-hover:scale-[1.04]"
                   />
                   <span className="absolute left-3 top-3 border border-ink bg-gold-400 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-ink">
                     {tool.role}

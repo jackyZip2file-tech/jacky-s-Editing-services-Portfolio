@@ -22,11 +22,10 @@ npm install
 
 ## 3. Environment
 
-```bash
-cp .env.local.example .env.local
-```
-
-Fill in:
+The Firebase web config for project **`jacky-s-portfolio`** is already baked into
+`lib/firebase.js`, so the site works on Vercel with **no environment variables at all**.
+Every value can still be overridden with a `NEXT_PUBLIC_FIREBASE_*` variable if the project
+is ever swapped:
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -34,10 +33,8 @@ NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
-NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
-
-The public site works without these (it shows sample cards). The owner dashboard needs them.
 
 ## 4. Run
 
@@ -50,8 +47,8 @@ npm run build    # production build
 
 1. Push this folder to a GitHub repo.
 2. Import the repo on [vercel.com](https://vercel.com).
-3. Add the six `NEXT_PUBLIC_FIREBASE_*` variables in **Project → Settings → Environment Variables**.
-4. Deploy. Then add the `.vercel.app` domain to Firebase **Authorized domains**.
+3. No environment variables needed — the Firebase config is committed in `lib/firebase.js`.
+4. Deploy. Then add the `.vercel.app` domain to Firebase **Authentication → Settings → Authorized domains**.
 
 ## 6. Publishing work
 

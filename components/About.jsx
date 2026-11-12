@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Reveal from '@/components/Reveal';
 
 const TIMELINE = [
@@ -44,7 +45,28 @@ export default function About() {
   return (
     <section id="about" className="relative border-b border-ink/10 bg-white">
       <div className="container-sharp py-20 sm:py-24">
-        <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          {/* Introduction visual */}
+          <Reveal>
+            <figure className="relative mx-auto max-w-[420px] lg:mx-0">
+              <div className="relative border-2 border-ink bg-white p-2 shadow-sharp">
+                <div className="relative aspect-square w-full overflow-hidden border border-ink bg-ink">
+                  <Image
+                    src="/images/introduction.png"
+                    alt="Jacky — the editor behind the timeline"
+                    fill
+                    sizes="(max-width: 1024px) 420px, 420px"
+                    loading="eager"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+              <figcaption className="absolute -bottom-3 right-3 border border-ink bg-gold-400 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-ink">
+                Human-edited · since 2019
+              </figcaption>
+            </figure>
+          </Reveal>
+
           <div>
             <Reveal>
               <p className="eyebrow">01 — About</p>
@@ -79,7 +101,9 @@ export default function About() {
               </p>
             </Reveal>
           </div>
+        </div>
 
+        <div className="mt-16 grid gap-12 lg:grid-cols-2 lg:gap-16">
           <div>
             <Reveal>
               <p className="eyebrow">The philosophy</p>
@@ -101,11 +125,16 @@ export default function About() {
                 </Reveal>
               ))}
             </div>
+          </div>
 
-            <Reveal delay={0.2}>
-              <ol className="mt-10 space-y-5">
-                {TIMELINE.map((step) => (
-                  <li key={step.year} className="flex gap-4">
+          <div>
+            <Reveal>
+              <p className="eyebrow">The road here</p>
+            </Reveal>
+            <ol className="mt-5 space-y-5">
+              {TIMELINE.map((step, index) => (
+                <li key={step.year}>
+                  <Reveal delay={0.05 * index} className="flex gap-4">
                     <span className="mt-[3px] w-14 shrink-0 font-display text-[11px] font-bold uppercase tracking-[0.16em] text-gold-600">
                       {step.year}
                     </span>
@@ -113,10 +142,10 @@ export default function About() {
                       <p className="text-sm font-semibold text-ink">{step.title}</p>
                       <p className="mt-1 text-sm leading-relaxed text-ink/60">{step.body}</p>
                     </div>
-                  </li>
-                ))}
-              </ol>
-            </Reveal>
+                  </Reveal>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </div>
