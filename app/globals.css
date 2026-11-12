@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0a0a0a;
+  --gold: #e0a82e;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--ink);
+  font-feature-settings: 'ss01' on, 'cv01' on;
+}
+
+::selection {
+  background: #f2c14e;
+  color: #0a0a0a;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* Structural hairline grid used behind hero + section dividers */
+.grid-lines {
+  background-image: linear-gradient(to right, rgba(10, 10, 10, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(10, 10, 10, 0.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+.noise-mask {
+  background-image: radial-gradient(rgba(10, 10, 10, 0.16) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+@layer utilities {
+  .container-sharp {
+    @apply mx-auto w-full max-w-[1180px] px-5 sm:px-8;
+  }
+  .hairline {
+    @apply border border-ink/10;
+  }
+  .gold-text {
+    @apply bg-gold-sheen bg-clip-text text-transparent;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.28em] text-ink/50;
+  }
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
+  .btn-sharp {
+    @apply inline-flex items-center justify-center gap-2 border border-ink px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] transition-all duration-300 ease-sharp;
+  }
+}
+
+@keyframes lb-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lb-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-lb-fade {
+  animation: lb-fade 0.2s ease-out both;
+}
+
+.animate-lb-pop {
+  animation: lb-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
