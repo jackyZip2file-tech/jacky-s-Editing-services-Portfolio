@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// All portfolio media is hosted externally (YouTube, Drive, Streamable, Postimages…),
+// so Storage is locked down completely. Nothing uploads to Firebase Storage.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
