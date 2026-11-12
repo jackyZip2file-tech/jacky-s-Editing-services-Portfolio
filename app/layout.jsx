@@ -15,6 +15,7 @@ const grotesk = Space_Grotesk({
 });
 
 export const metadata = {
+  metadataBase: new URL('https://jacky-s-editing-services-portfolio-git-main-jacky18.vercel.app'),
   title: "Jacky — Video Editor & Visual Designer",
   description:
     "Portfolio of Jacky — 7 years of video editing: trendy edits, meme compilations, tutorials, reference recreations and Photoshop + AI composites. CapCut Desktop, Picsart, Photoshop.",

@@ -28,8 +28,8 @@ export default function SiteHeader() {
     <header
       className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ease-sharp ${
         scrolled
-          ? 'border-ink bg-white/90 backdrop-blur-md'
-          : 'border-transparent bg-white/60 backdrop-blur-sm'
+          ? 'border-ink bg-white/95 backdrop-blur-md shadow-sm'
+          : 'border-ink/10 bg-white/80 backdrop-blur-sm'
       }`}
     >
       <div className="container-sharp flex h-[68px] items-center justify-between">
@@ -37,7 +37,7 @@ export default function SiteHeader() {
           <span className="relative block h-9 w-9 shrink-0 overflow-hidden rounded-full border border-ink bg-white ring-1 ring-gold-400/70 ring-offset-1 ring-offset-white">
             <Image
               src="/images/pfp.png"
-              alt="Jacky"
+              alt="Jacky site avatar"
               fill
               sizes="36px"
               priority
@@ -92,10 +92,10 @@ export default function SiteHeader() {
             <button
               type="button"
               onClick={signIn}
-              className="focus-ring hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/45 transition-colors hover:text-ink sm:block"
-              title="Owner sign-in"
+              className="focus-ring hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/60 transition-colors hover:text-ink sm:block"
+              title="Sign In"
             >
-              Owner Sign-In
+              Sign In
             </button>
           )}
 
@@ -148,9 +148,9 @@ export default function SiteHeader() {
                   setMenuOpen(false);
                   signIn();
                 }}
-                className="py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/45"
+                className="py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/60"
               >
-                Owner Sign-In
+                Sign In
               </button>
             ) : (
               <button
@@ -159,7 +159,7 @@ export default function SiteHeader() {
                   setMenuOpen(false);
                   signOutUser();
                 }}
-                className="py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/45"
+                className="py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/60"
               >
                 Sign out
               </button>

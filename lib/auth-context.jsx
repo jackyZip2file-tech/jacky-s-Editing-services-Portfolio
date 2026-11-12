@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   GoogleAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
   signInWithRedirect,
@@ -31,6 +32,26 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
+
+    // Handle return from signInWithRedirect
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setUser(result.user);
+        }
+      })
+      .catch((err) => {
+        console.warn('Firebase redirect result:', err?.code, err?.message);
+        if (err?.code === 'auth/unauthorized-domain') {
+          const domain = typeof window !== 'undefined' ? window.location.hostname : 'current domain';
+          setError(
+            `Domain "${domain}" is not authorized for OAuth in Firebase Console. Add it in Firebase Console -> Authentication -> Settings -> Authorized domains.`
+          );
+        } else if (err?.code && err.code !== 'auth/null-user') {
+          setError(err?.message || 'Authentication failed');
+        }
+      });
+
     const unsubscribe = onAuthStateChanged(
       auth,
       (nextUser) => {
@@ -54,25 +75,32 @@ export function AuthProvider({ children }) {
     setError('');
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
+      // Attempt popup sign-in first
       await signInWithPopup(auth, provider);
-    } catch (err) {
-      // Popup blocked or COOP-restricted (common in Brave) — fall back to a full redirect.
-      if (
-        err?.code === 'auth/popup-blocked' ||
-        err?.code === 'auth/popup-closed-by-user' ||
-        err?.code === 'auth/cancelled-popup-request' ||
-        err?.code === 'auth/operation-not-supported-in-this-environment'
-      ) {
-        try {
-          await signInWithRedirect(auth, provider);
-          return;
-        } catch (redirectErr) {
-          setError(redirectErr?.message || 'Sign-in failed');
-          return;
+    } catch (popupErr) {
+      console.warn('Popup sign-in encountered an error:', popupErr?.code, popupErr?.message);
+
+      // Clean fallback: if signInWithPopup fails due to unauthorized domain, popup blockers,
+      // COOP policy or cross-origin restrictions, gracefully fallback to signInWithRedirect
+      try {
+        await signInWithRedirect(auth, provider);
+        return;
+      } catch (redirectErr) {
+        console.error('Redirect sign-in fallback failed:', redirectErr);
+        if (
+          redirectErr?.code === 'auth/unauthorized-domain' ||
+          popupErr?.code === 'auth/unauthorized-domain'
+        ) {
+          const domain = typeof window !== 'undefined' ? window.location.hostname : 'current domain';
+          setError(
+            `Domain "${domain}" is not authorized in Firebase Console. Go to Firebase Console -> Authentication -> Settings -> Authorized domains and add "${domain}".`
+          );
+        } else {
+          setError(redirectErr?.message || popupErr?.message || 'Sign-in failed. Please try again.');
         }
       }
-      setError(err?.message || 'Sign-in failed');
     }
   }, []);
 

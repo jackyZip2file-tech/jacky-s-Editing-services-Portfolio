@@ -226,7 +226,7 @@ export default function AdminPanel() {
             onClick={signIn}
             className="btn-sharp border-ink bg-white text-ink hover:bg-ink hover:text-white"
           >
-            Owner Sign-In
+            Sign In
           </button>
         </div>
         {error ? (

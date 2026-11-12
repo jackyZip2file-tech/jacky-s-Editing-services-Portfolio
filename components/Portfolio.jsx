@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Reveal from '@/components/Reveal';
 import Lightbox from '@/components/Lightbox';
 import { getClientDb } from '@/lib/firebase';
 import { CATEGORIES, SAMPLE_PROJECTS } from '@/lib/data';
-import { aspectClass, resolveMedia } from '@/lib/media';
+import { aspectClass, aspectLabel, resolveMedia } from '@/lib/media';
 
 function sortProjects(list) {
   return [...list].sort((a, b) => {
@@ -21,11 +21,17 @@ function sortProjects(list) {
 }
 
 export default function Portfolio() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const reduce = useReducedMotion();
+  const [projects, setProjects] = useState(SAMPLE_PROJECTS);
+  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('All');
   const [active, setActive] = useState(null);
   const [source, setSource] = useState('samples');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const closeLightbox = useCallback(() => setActive(null), []);
 
@@ -54,7 +60,7 @@ export default function Portfolio() {
         setLoading(false);
       },
       (err) => {
-        console.warn('Portfolio listener failed:', err?.message);
+        console.warn('Portfolio listener error:', err?.message);
         setProjects(SAMPLE_PROJECTS);
         setSource('samples');
         setLoading(false);
@@ -78,23 +84,25 @@ export default function Portfolio() {
 
   return (
     <section id="work" className="relative border-b border-ink/10 bg-white">
-      <div className="container-sharp py-20 sm:py-24">
+      <div className="container-sharp py-16 sm:py-24">
+        {/* Header */}
         <div className="flex flex-wrap items-end justify-between gap-6">
           <Reveal>
-            <p className="eyebrow">03 — Selected work</p>
-            <h2 className="mt-3 font-display text-[clamp(1.9rem,4vw,3rem)] font-bold leading-[1.02] tracking-[-0.02em] text-ink">
+            <p className="eyebrow">03 — Selected Work</p>
+            <h2 className="mt-3 font-display text-[clamp(2rem,4.2vw,3.2rem)] font-bold leading-[1.02] tracking-[-0.02em] text-ink">
               The portfolio
             </h2>
           </Reveal>
           <Reveal delay={0.06}>
-            <p className="max-w-[38ch] text-sm leading-relaxed text-ink/60">
-              Filter by style. Click any piece to open it full-size — vertical reels, horizontal
-              uploads and square posts all render in their native ratio.
+            <p className="max-w-[42ch] text-sm leading-relaxed text-ink/70">
+              Filter by style. Click any piece to play it full-screen — vertical TikToks/Reels (9:16),
+              widescreen YouTube (16:9), and square feed posts (1:1) all render in their native ratio.
             </p>
           </Reveal>
         </div>
 
-        <Reveal delay={0.1} className="mt-8 flex flex-wrap gap-2">
+        {/* Filter buttons */}
+        <Reveal delay={0.08} className="mt-8 flex flex-wrap gap-2">
           {filters.map((category) => {
             const isActive = filter === category;
             return (
@@ -102,10 +110,10 @@ export default function Portfolio() {
                 key={category}
                 type="button"
                 onClick={() => setFilter(category)}
-                className={`focus-ring border px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all duration-300 ease-sharp ${
+                className={`focus-ring border px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] transition-all duration-300 ease-sharp ${
                   isActive
-                    ? 'border-ink bg-ink text-white'
-                    : 'border-ink/20 bg-white text-ink/60 hover:border-ink hover:text-ink'
+                    ? 'border-ink bg-ink text-white shadow-sharp-sm'
+                    : 'border-ink/20 bg-white text-ink/65 hover:border-ink hover:text-ink'
                 }`}
                 aria-pressed={isActive}
               >
@@ -115,78 +123,112 @@ export default function Portfolio() {
           })}
         </Reveal>
 
+        {/* Gallery Grid */}
         {loading ? (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((key) => (
               <div
                 key={key}
-                className="aspect-video animate-pulse border border-ink/10 bg-ink/5"
+                className="aspect-video animate-pulse border-2 border-ink/10 bg-ink/5"
                 aria-hidden="true"
               />
             ))}
           </div>
         ) : visible.length === 0 ? (
           <div className="mt-10 border border-dashed border-ink/25 p-12 text-center">
-            <p className="font-display text-lg font-bold text-ink">Nothing in this style yet</p>
+            <p className="font-display text-lg font-bold text-ink">No edits in this style yet</p>
             <p className="mt-2 text-sm text-ink/55">
-              Pick another filter, or check back soon — new work lands regularly.
+              Select another filter or check back soon — new pieces are published regularly.
             </p>
           </div>
         ) : (
           <div className="mt-10 grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((project, index) => {
               const media = resolveMedia(project.url, project.mediaType);
-              const thumb = project.thumbUrl || media.thumb || (media.kind === 'image' ? media.src : '');
+              const thumb =
+                project.thumbUrl || media.thumb || (media.kind === 'image' ? media.src : '');
+
+              const motionProps =
+                !mounted || reduce
+                  ? {}
+                  : {
+                      initial: { opacity: 0, y: 16 },
+                      whileInView: { opacity: 1, y: 0 },
+                      viewport: { once: true, amount: 0.05 },
+                      transition: {
+                        duration: 0.5,
+                        delay: Math.min(index * 0.04, 0.24),
+                        ease: [0.22, 1, 0.36, 1],
+                      },
+                    };
+
               return (
                 <motion.button
                   key={project.id}
                   type="button"
                   onClick={() => setActive(project)}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-60px' }}
-                  transition={{ duration: 0.5, delay: Math.min(index * 0.04, 0.28), ease: [0.22, 1, 0.36, 1] }}
-                  className="focus-ring group relative w-full border border-ink bg-white text-left transition-all duration-300 ease-sharp hover:-translate-y-1 hover:shadow-sharp-sm"
+                  {...motionProps}
+                  className="focus-ring group relative w-full border-2 border-ink bg-white text-left shadow-sharp-sm transition-all duration-300 ease-sharp hover:-translate-y-1 hover:shadow-sharp"
                 >
-                  <div className={`relative w-full overflow-hidden border-b border-ink bg-ink ${aspectClass(project.aspect)}`}>
+                  {/* Media container matching aspect ratio */}
+                  <div
+                    className={`relative w-full overflow-hidden border-b-2 border-ink bg-black ${aspectClass(
+                      project.aspect
+                    )}`}
+                  >
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={thumb}
                         alt={project.title || 'Portfolio piece'}
                         loading="lazy"
-                        className="h-full w-full object-cover opacity-95 transition-transform duration-500 ease-sharp group-hover:scale-[1.03]"
+                        className="h-full w-full object-cover opacity-95 transition-transform duration-500 ease-sharp group-hover:scale-[1.04]"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink via-[#1b1b1b] to-ink">
-                        <span className="font-display text-[11px] font-bold uppercase tracking-[0.28em] text-gold-400">
-                          Jacky
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink via-[#181818] to-ink">
+                        <span className="font-display text-[12px] font-bold uppercase tracking-[0.24em] text-gold-400">
+                          {project.title || 'Jacky Edit'}
                         </span>
                       </div>
                     )}
 
-                    <span className="absolute inset-0 bg-ink/0 transition-colors duration-300 group-hover:bg-ink/25" />
-                    <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center border border-white/70 bg-ink/60 text-white opacity-0 backdrop-blur-sm transition-all duration-300 ease-sharp group-hover:opacity-100">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    {/* Aspect Ratio Badge */}
+                    <span className="absolute left-2.5 top-2.5 border border-ink bg-white/95 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-ink shadow-sm">
+                      {project.aspect || '16:9'}
+                    </span>
+
+                    {/* Play Hover Overlay */}
+                    <span className="absolute inset-0 bg-ink/0 transition-colors duration-300 group-hover:bg-ink/30" />
+                    <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-ink/70 text-white opacity-0 backdrop-blur-sm transition-all duration-300 ease-sharp group-hover:opacity-100">
+                      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M4 2.5v11l9-5.5-9-5.5Z" />
                       </svg>
                     </span>
+
                     {project.sample ? (
-                      <span className="absolute right-2 top-2 border border-ink bg-white/95 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-ink/60">
+                      <span className="absolute right-2.5 top-2.5 border border-ink bg-gold-400 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-ink">
                         Sample
                       </span>
                     ) : null}
                   </div>
 
-                  <div className="p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-600">
-                      {project.category || 'Edit'}
-                    </p>
-                    <h3 className="mt-1.5 font-display text-[15px] font-bold leading-snug tracking-tight text-ink">
-                      {project.title || 'Untitled piece'}
+                  {/* Card Content */}
+                  <div className="p-4 sm:p-5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-600">
+                        {project.category || 'Video Edit'}
+                      </p>
+                      <span className="text-[10px] font-semibold text-ink/40">
+                        {aspectLabel(project.aspect)}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-2 font-display text-[16px] font-bold leading-snug tracking-tight text-ink group-hover:text-gold-600 transition-colors">
+                      {project.title || 'Untitled Edit'}
                     </h3>
+
                     {project.description ? (
-                      <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-ink/55">
+                      <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink/65">
                         {project.description}
                       </p>
                     ) : null}
@@ -198,8 +240,8 @@ export default function Portfolio() {
         )}
 
         {source === 'samples' ? (
-          <p className="mt-8 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/35">
-            Sample layout — real projects replace these once the owner uploads them
+          <p className="mt-8 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
+            Preview Layout — Sign in to publish real projects to Firestore
           </p>
         ) : null}
       </div>
