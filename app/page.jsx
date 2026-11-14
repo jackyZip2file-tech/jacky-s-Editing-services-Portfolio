@@ -7,22 +7,24 @@ import Guidelines from '@/components/Guidelines';
 import Contact from '@/components/Contact';
 import AdminPanel from '@/components/AdminPanel';
 import SiteFooter from '@/components/Footer';
-import { NativeAdBanner, StandardAdBanner } from '@/components/AdBanner';
+import { LeaderboardBanner, NativeAdBanner, SideBanners } from '@/components/AdBanner';
 
 export default function Page() {
   return (
     <>
       <SiteHeader />
+      {/* Desktop Left & Right Skyscraper Side Banners */}
+      <SideBanners />
       <main>
         <Hero />
         <About />
         <Toolkit />
         <Portfolio />
-        {/* Well-placed, non-intrusive Native Ad Banner */}
+        {/* Native Banner Ad */}
         <NativeAdBanner />
         <Guidelines />
-        {/* Well-placed, non-intrusive Standard Ad Banner */}
-        <StandardAdBanner />
+        {/* 728x90 Leaderboard Banner Ad */}
+        <LeaderboardBanner />
         <Contact />
         <AdminPanel />
       </main>
