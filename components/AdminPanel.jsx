@@ -1,24 +1,28 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addDoc,
   collection,
   deleteDoc,
   doc,
+  getDoc,
   onSnapshot,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { useAuth } from '@/lib/auth-context';
 import { getClientDb } from '@/lib/firebase';
-import { ASPECTS, CATEGORIES, SAMPLE_PROJECTS } from '@/lib/data';
+import { CATEGORIES, SAMPLE_PROJECTS, SHOWREEL } from '@/lib/data';
+import { ASPECT_OPTIONS, aspectLabel } from '@/lib/media';
 
 const EMPTY_FORM = {
   title: '',
   category: CATEGORIES[0],
   mediaType: 'video',
   aspect: '16:9',
+  customAspect: '',
   url: '',
   thumbUrl: '',
   description: '',
@@ -30,6 +34,158 @@ const FIELD_CLASS =
   'focus-ring w-full border border-ink/20 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink/35';
 const LABEL_CLASS = 'mb-1.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-ink/55';
 
+/**
+ * Aspect Ratio Dropdown matching CapCut design from ratio types.png
+ */
+function AspectRatioSelector({ value, customValue, onChange, onCustomChange }) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className={LABEL_CLASS}>Aspect Ratio</label>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="focus-ring flex w-full items-center justify-between border border-ink/20 bg-white px-3 py-2.5 text-sm font-medium text-ink hover:border-ink"
+      >
+        <span>{aspectLabel(value, customValue)}</span>
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          className={`transition-transform ${open ? 'rotate-180' : ''}`}
+        >
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z" />
+        </svg>
+      </button>
+
+      {/* CapCut-inspired dark popover matching ratio types.png */}
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 w-64 border border-[#333] bg-[#1a1c1e] p-1.5 shadow-2xl rounded-sm text-white text-xs">
+          <div className="max-h-72 overflow-y-auto space-y-0.5 pr-1">
+            {/* Group 1: Original & Custom */}
+            {ASPECT_OPTIONS.filter((opt) => opt.group === 'auto').map((opt) => {
+              const isSelected = value === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.id);
+                    if (opt.id !== 'Custom') setOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-left rounded-sm transition-colors ${
+                    isSelected ? 'bg-[#2a2d32] text-white font-semibold' : 'text-neutral-300 hover:bg-[#25282d]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 text-[#14b8a6] font-bold">
+                      {isSelected ? '✓' : ''}
+                    </span>
+                    <span>{opt.label}</span>
+                  </div>
+                </button>
+              );
+            })}
+
+            <div className="my-1 border-t border-[#333]" />
+
+            {/* Group 2: Horizontal ratios */}
+            {ASPECT_OPTIONS.filter((opt) => opt.group === 'horizontal').map((opt) => {
+              const isSelected = value === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.id);
+                    setOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-left rounded-sm transition-colors ${
+                    isSelected ? 'bg-[#2a2d32] text-white font-semibold' : 'text-neutral-300 hover:bg-[#25282d]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 text-[#14b8a6] font-bold">
+                      {isSelected ? '✓' : ''}
+                    </span>
+                    <span>{opt.label}</span>
+                  </div>
+                  {/* Wireframe Rectangle Icon */}
+                  <span
+                    className="border border-neutral-400 inline-block shrink-0"
+                    style={{ width: `${opt.iconWidth}px`, height: `${opt.iconHeight}px` }}
+                  />
+                </button>
+              );
+            })}
+
+            <div className="my-1 border-t border-[#333]" />
+
+            {/* Group 3: Vertical & Square ratios */}
+            {ASPECT_OPTIONS.filter((opt) => opt.group === 'vertical' || opt.group === 'square').map(
+              (opt) => {
+                const isSelected = value === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.id);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between px-3 py-2 text-left rounded-sm transition-colors ${
+                      isSelected ? 'bg-[#2a2d32] text-white font-semibold' : 'text-neutral-300 hover:bg-[#25282d]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-4 text-[#14b8a6] font-bold">
+                        {isSelected ? '✓' : ''}
+                      </span>
+                      <span>{opt.label}</span>
+                    </div>
+                    {/* Wireframe Rectangle Icon */}
+                    <span
+                      className="border border-neutral-400 inline-block shrink-0"
+                      style={{ width: `${opt.iconWidth}px`, height: `${opt.iconHeight}px` }}
+                    />
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Input when Custom is chosen */}
+      {value === 'Custom' && (
+        <div className="mt-2">
+          <input
+            type="text"
+            className={FIELD_CLASS}
+            placeholder="e.g. 21:9 or 2.39:1"
+            value={customValue}
+            onChange={(e) => onCustomChange(e.target.value)}
+          />
+          <p className="mt-1 text-[10px] text-ink/50">Enter custom ratio as width:height (e.g. 21:9)</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { user, isOwner, loading, configured, signIn, signOutUser, error } = useAuth();
   const [projects, setProjects] = useState([]);
@@ -38,6 +194,8 @@ export default function AdminPanel() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [showreelUrl, setShowreelUrl] = useState('');
+  const [showreelNotice, setShowreelNotice] = useState('');
 
   useEffect(() => {
     if (!isOwner) {
@@ -46,6 +204,20 @@ export default function AdminPanel() {
     }
     const db = getClientDb();
     if (!db) return undefined;
+
+    // Load featured showreel config from Firestore if available
+    getDoc(doc(db, 'settings', 'showreel'))
+      .then((snap) => {
+        if (snap.exists() && snap.data()?.url) {
+          setShowreelUrl(snap.data().url);
+        } else {
+          setShowreelUrl(SHOWREEL.url);
+        }
+      })
+      .catch(() => {
+        setShowreelUrl(SHOWREEL.url);
+      });
+
     const unsubscribe = onSnapshot(
       collection(db, 'portfolio'),
       (snapshot) => {
@@ -78,6 +250,7 @@ export default function AdminPanel() {
     category: form.category,
     mediaType: form.mediaType,
     aspect: form.aspect,
+    customAspect: form.customAspect?.trim() || '',
     url: form.url.trim(),
     thumbUrl: form.thumbUrl.trim(),
     description: form.description.trim(),
@@ -130,6 +303,7 @@ export default function AdminPanel() {
       category: project.category || CATEGORIES[0],
       mediaType: project.mediaType || 'video',
       aspect: project.aspect || '16:9',
+      customAspect: project.customAspect || '',
       url: project.url || '',
       thumbUrl: project.thumbUrl || '',
       description: project.description || '',
@@ -175,9 +349,32 @@ export default function AdminPanel() {
           })
         )
       );
-      setNotice('Starter projects added — edit them with your real work.');
+      setNotice('Starter projects seeded into Firestore! They now appear in the live portfolio.');
     } catch (err) {
       setNotice(err?.message || 'Seeding failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSaveShowreel = async (e) => {
+    e.preventDefault();
+    const db = getClientDb();
+    if (!db) return;
+    setBusy(true);
+    setShowreelNotice('');
+    try {
+      await setDoc(
+        doc(db, 'settings', 'showreel'),
+        { url: showreelUrl.trim(), updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('jacky_showreel_url', showreelUrl.trim());
+      }
+      setShowreelNotice('Featured showreel link updated!');
+    } catch (err) {
+      setShowreelNotice(err?.message || 'Could not update showreel link.');
     } finally {
       setBusy(false);
     }
@@ -304,6 +501,36 @@ export default function AdminPanel() {
           </p>
         ) : null}
 
+        {/* Featured Showreel Link Editor */}
+        <div className="mt-6 border border-ink bg-white p-4 sm:p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-sm font-bold uppercase tracking-[0.14em] text-ink">
+              Featured Hero Showreel Link
+            </h3>
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-600">
+              Hero Section Video
+            </span>
+          </div>
+          <form onSubmit={handleSaveShowreel} className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input
+              className={FIELD_CLASS}
+              placeholder="Paste YouTube, Vimeo, Drive, or MP4 URL for the Showreel"
+              value={showreelUrl}
+              onChange={(e) => setShowreelUrl(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={busy}
+              className="btn-sharp shrink-0 border-ink bg-ink text-white hover:bg-gold-500 hover:text-ink"
+            >
+              Save Showreel
+            </button>
+          </form>
+          {showreelNotice && (
+            <p className="mt-2 text-xs font-semibold text-gold-700">{showreelNotice}</p>
+          )}
+        </div>
+
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <form onSubmit={handleSubmit} className="border border-ink bg-white p-5 sm:p-6">
             <div className="flex items-center justify-between">
@@ -354,23 +581,14 @@ export default function AdminPanel() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className={LABEL_CLASS} htmlFor="admin-aspect">
-                    Aspect ratio
-                  </label>
-                  <select
-                    id="admin-aspect"
-                    className={FIELD_CLASS}
-                    value={form.aspect}
-                    onChange={updateField('aspect')}
-                  >
-                    {ASPECTS.map((aspect) => (
-                      <option key={aspect} value={aspect}>
-                        {aspect}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
+                {/* Aspect Ratio Selector with Auto & Custom modes matching ratio types.png */}
+                <AspectRatioSelector
+                  value={form.aspect}
+                  customValue={form.customAspect}
+                  onChange={(val) => setForm((prev) => ({ ...prev, aspect: val }))}
+                  onCustomChange={(val) => setForm((prev) => ({ ...prev, customAspect: val }))}
+                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -485,7 +703,7 @@ export default function AdminPanel() {
                         {project.title || 'Untitled'}
                       </p>
                       <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.12em] text-ink/40">
-                        {project.category} · {project.aspect} · #{project.order ?? 999}
+                        {project.category} · {aspectLabel(project.aspect, project.customAspect)} · #{project.order ?? 999}
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-2">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { aspectClass, resolveMedia } from '@/lib/media';
+import { aspectClass, aspectStyle, resolveMedia } from '@/lib/media';
 
 function MediaFrame({ project }) {
   const media = resolveMedia(project.url, project.mediaType);
@@ -96,7 +96,10 @@ export default function Lightbox({ project, onClose }) {
           </svg>
         </button>
 
-        <div className={`relative w-full bg-black ${aspectClass(project.aspect)}`}>
+        <div
+          className={`relative w-full bg-black ${aspectClass(project.aspect)}`}
+          style={aspectStyle(project.aspect, project.customAspect)}
+        >
           <div className="absolute inset-0 flex items-center justify-center">
             <MediaFrame project={project} />
           </div>

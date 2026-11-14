@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Reveal from '@/components/Reveal';
 
@@ -43,6 +44,188 @@ const PHILOSOPHY_PILLARS = [
     accent: 'border-l-4 border-gold-400',
   },
 ];
+
+function StoryAudioPlayer() {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoadedMetadata = () => setDuration(audio.duration || 80);
+    const onEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('ended', onEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, []);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {});
+    }
+  };
+
+  const handleSeek = (e) => {
+    if (!audioRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newTime = percent * duration;
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const formatTime = (secs) => {
+    if (!secs || isNaN(secs)) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div className="mt-6 mb-7 border-2 border-ink bg-white p-4 shadow-sharp-sm sm:p-5">
+      <audio ref={audioRef} src="/audio/jacky-story.mp3" preload="metadata" />
+
+      {/* Top row badge & label */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink/10 pb-2.5">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            {isPlaying && (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400 opacity-75" />
+            )}
+            <span
+              className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
+                isPlaying ? 'bg-gold-500' : 'bg-ink/40'
+              }`}
+            />
+          </span>
+          <span className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-ink">
+            AI Voice Narration // Jacky&apos;s Journey
+          </span>
+        </div>
+        <span className="border border-ink/20 bg-gold-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-gold-700">
+          Audio Story
+        </span>
+      </div>
+
+      {/* Main Controls Row */}
+      <div className="mt-4 flex items-center gap-3 sm:gap-4">
+        {/* Big Play/Pause Button */}
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="focus-ring flex h-11 w-11 shrink-0 items-center justify-center border-2 border-ink bg-ink text-white shadow-sharp-sm transition-all duration-300 hover:bg-gold-500 hover:text-ink active:translate-y-0.5"
+          aria-label={isPlaying ? 'Pause narration' : 'Play narration'}
+          title={isPlaying ? 'Pause' : 'Play narration'}
+        >
+          {isPlaying ? (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5Zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5Z" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" className="ml-0.5">
+              <path d="M4 2.5v11l9-5.5-9-5.5Z" />
+            </svg>
+          )}
+        </button>
+
+        {/* Scrubber & Waveform */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between text-[11px] font-bold text-ink/70">
+            <span className="font-display">
+              {isPlaying ? 'Playing Speech...' : 'Listen to how I started'}
+            </span>
+            <span className="font-mono text-[10px] text-ink/50">
+              {formatTime(currentTime)} / {formatTime(duration || 80)}
+            </span>
+          </div>
+
+          {/* Interactive Progress Bar */}
+          <div
+            onClick={handleSeek}
+            className="group relative mt-2 h-2.5 w-full cursor-pointer border border-ink/20 bg-ink/5"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <div
+              className="h-full bg-gold-500 transition-[width] duration-150 group-hover:bg-gold-600"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Animated Sound Waveform Bars */}
+        <div className="hidden sm:flex items-end gap-1 h-6 shrink-0 px-2">
+          {[12, 20, 16, 24, 14, 22, 10, 18].map((height, i) => (
+            <span
+              key={i}
+              className={`w-1 bg-ink transition-all duration-300 ${
+                isPlaying ? 'animate-pulse' : 'opacity-30'
+              }`}
+              style={{
+                height: isPlaying ? `${Math.max(6, (height * (i % 2 === 0 ? 1 : 0.8)))}px` : '6px',
+                animationDelay: `${i * 0.1}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Mute Button */}
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="focus-ring flex h-8 w-8 shrink-0 items-center justify-center border border-ink/20 text-ink/60 hover:border-ink hover:text-ink"
+          title={isMuted ? 'Unmute' : 'Mute'}
+          aria-label={isMuted ? 'Unmute narration' : 'Mute narration'}
+        >
+          {isMuted ? (
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06Zm7.137 2.096a.5.5 0 0 1 0 .708L12.707 7.5l1.147 1.146a.5.5 0 0 1-.708.708L12 8.207l-1.146 1.147a.5.5 0 0 1-.708-.708L11.293 7.5l-1.147-1.146a.5.5 0 0 1 .708-.708L12 6.793l1.146-1.147a.5.5 0 0 1 .708 0Z" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707Zm-2.697-8.338A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06Z" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Philosophy Footnote */}
+      <p className="mt-3 border-t border-ink/10 pt-2 text-[11px] leading-relaxed text-ink/55">
+        <span className="font-bold text-ink">Philosophy in action:</span> I use AI voice as a precision
+        creative tool when original audio is unusable — while every timeline cut remains 100% human-placed.
+      </p>
+    </div>
+  );
+}
 
 export default function About() {
   return (
@@ -110,7 +293,12 @@ export default function About() {
               </p>
             </Reveal>
 
-            <Reveal delay={0.06} className="mt-6 space-y-4 text-[15px] leading-relaxed text-ink/75">
+            {/* AI Voice Narration Widget Attached near top introduction */}
+            <Reveal delay={0.04}>
+              <StoryAudioPlayer />
+            </Reveal>
+
+            <Reveal delay={0.06} className="space-y-4 text-[15px] leading-relaxed text-ink/75">
               <p>
                 My editing journey started nearly 7 years ago during the 2019–2020 lockdowns. With
                 plenty of free time at home, I dove into the internet to pick up new hobbies — playing

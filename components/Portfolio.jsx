@@ -6,8 +6,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import Reveal from '@/components/Reveal';
 import Lightbox from '@/components/Lightbox';
 import { getClientDb } from '@/lib/firebase';
-import { CATEGORIES, SAMPLE_PROJECTS } from '@/lib/data';
-import { aspectClass, aspectLabel, resolveMedia } from '@/lib/media';
+import { CATEGORIES } from '@/lib/data';
+import { aspectClass, aspectLabel, aspectStyle, resolveMedia } from '@/lib/media';
 
 function sortProjects(list) {
   return [...list].sort((a, b) => {
@@ -22,11 +22,10 @@ function sortProjects(list) {
 
 export default function Portfolio() {
   const reduce = useReducedMotion();
-  const [projects, setProjects] = useState(SAMPLE_PROJECTS);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('All');
   const [active, setActive] = useState(null);
-  const [source, setSource] = useState('samples');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -38,7 +37,7 @@ export default function Portfolio() {
   useEffect(() => {
     const db = getClientDb();
     if (!db) {
-      setProjects(SAMPLE_PROJECTS);
+      setProjects([]);
       setLoading(false);
       return;
     }
@@ -50,19 +49,12 @@ export default function Portfolio() {
           id: docSnap.id,
           ...docSnap.data(),
         }));
-        if (items.length) {
-          setProjects(sortProjects(items));
-          setSource('firestore');
-        } else {
-          setProjects(SAMPLE_PROJECTS);
-          setSource('samples');
-        }
+        setProjects(sortProjects(items));
         setLoading(false);
       },
       (err) => {
         console.warn('Portfolio listener error:', err?.message);
-        setProjects(SAMPLE_PROJECTS);
-        setSource('samples');
+        setProjects([]);
         setLoading(false);
       }
     );
@@ -85,7 +77,7 @@ export default function Portfolio() {
   return (
     <section id="work" className="relative border-b border-ink/10 bg-white">
       <div className="container-sharp py-16 sm:py-24">
-        {/* Header */}
+        {/* Section Header */}
         <div className="flex flex-wrap items-end justify-between gap-6">
           <Reveal>
             <p className="eyebrow">03 — Selected Work</p>
@@ -101,32 +93,34 @@ export default function Portfolio() {
           </Reveal>
         </div>
 
-        {/* Filter buttons */}
-        <Reveal delay={0.08} className="mt-8 flex flex-wrap gap-2">
-          {filters.map((category) => {
-            const isActive = filter === category;
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setFilter(category)}
-                className={`focus-ring border px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] transition-all duration-300 ease-sharp ${
-                  isActive
-                    ? 'border-ink bg-ink text-white shadow-sharp-sm'
-                    : 'border-ink/20 bg-white text-ink/65 hover:border-ink hover:text-ink'
-                }`}
-                aria-pressed={isActive}
-              >
-                {category}
-              </button>
-            );
-          })}
-        </Reveal>
+        {/* Filter buttons - only show if there are projects or multiple categories */}
+        {projects.length > 0 && filters.length > 1 && (
+          <Reveal delay={0.08} className="mt-8 flex flex-wrap gap-2">
+            {filters.map((category) => {
+              const isActive = filter === category;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setFilter(category)}
+                  className={`focus-ring border px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] transition-all duration-300 ease-sharp ${
+                    isActive
+                      ? 'border-ink bg-ink text-white shadow-sharp-sm'
+                      : 'border-ink/20 bg-white text-ink/65 hover:border-ink hover:text-ink'
+                  }`}
+                  aria-pressed={isActive}
+                >
+                  {category}
+                </button>
+              );
+            })}
+          </Reveal>
+        )}
 
-        {/* Gallery Grid */}
+        {/* Gallery Content */}
         {loading ? (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2, 3, 4, 5].map((key) => (
+            {[0, 1, 2].map((key) => (
               <div
                 key={key}
                 className="aspect-video animate-pulse border-2 border-ink/10 bg-ink/5"
@@ -134,11 +128,52 @@ export default function Portfolio() {
               />
             ))}
           </div>
+        ) : projects.length === 0 ? (
+          /* EMPTY STATE REQUESTED BY USER: "Nothing to Show Yet!" */
+          <div className="mt-12 flex flex-col items-center justify-center border-2 border-dashed border-ink/20 bg-gold-50/30 p-12 text-center sm:p-16 shadow-sharp-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-ink bg-white shadow-sharp-sm">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-gold-500"
+              >
+                <polygon points="23 7 16 12 23 17 23 7" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+            </div>
+            <h3 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+              Nothing to Show Yet!
+            </h3>
+            <p className="mt-2.5 max-w-[48ch] text-[14px] leading-relaxed text-ink/65">
+              No portfolio projects have been published to this gallery yet. Check back soon for fresh edits,
+              or reach out directly on Instagram or Discord to request custom sample cuts!
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="#contact"
+                className="btn-sharp border-ink bg-ink text-white hover:bg-gold-500 hover:text-ink shadow-sharp-sm"
+              >
+                Request a Sample
+              </a>
+              <a
+                href="#process"
+                className="btn-sharp border-ink bg-white text-ink hover:bg-ink hover:text-white"
+              >
+                Client Guidelines
+              </a>
+            </div>
+          </div>
         ) : visible.length === 0 ? (
           <div className="mt-10 border border-dashed border-ink/25 p-12 text-center">
             <p className="font-display text-lg font-bold text-ink">No edits in this style yet</p>
             <p className="mt-2 text-sm text-ink/55">
-              Select another filter or check back soon — new pieces are published regularly.
+              Select another filter or view all work.
             </p>
           </div>
         ) : (
@@ -175,6 +210,7 @@ export default function Portfolio() {
                     className={`relative w-full overflow-hidden border-b-2 border-ink bg-black ${aspectClass(
                       project.aspect
                     )}`}
+                    style={aspectStyle(project.aspect, project.customAspect)}
                   >
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -185,7 +221,7 @@ export default function Portfolio() {
                         className="h-full w-full object-cover opacity-95 transition-transform duration-500 ease-sharp group-hover:scale-[1.04]"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink via-[#181818] to-ink">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink via-[#181818] to-ink min-h-[160px]">
                         <span className="font-display text-[12px] font-bold uppercase tracking-[0.24em] text-gold-400">
                           {project.title || 'Jacky Edit'}
                         </span>
@@ -219,7 +255,7 @@ export default function Portfolio() {
                         {project.category || 'Video Edit'}
                       </p>
                       <span className="text-[10px] font-semibold text-ink/40">
-                        {aspectLabel(project.aspect)}
+                        {aspectLabel(project.aspect, project.customAspect)}
                       </span>
                     </div>
 
@@ -238,12 +274,6 @@ export default function Portfolio() {
             })}
           </div>
         )}
-
-        {source === 'samples' ? (
-          <p className="mt-8 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/40">
-            Preview Layout — Sign in to publish real projects to Firestore
-          </p>
-        ) : null}
       </div>
 
       <Lightbox project={active} onClose={closeLightbox} />
