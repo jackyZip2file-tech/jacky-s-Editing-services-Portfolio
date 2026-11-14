@@ -71,15 +71,15 @@ export function LeaderboardBanner() {
     <aside aria-label="Sponsored Advertisement" className="container-sharp my-10 sm:my-14">
       <div className="relative mx-auto max-w-[780px] border-2 border-ink bg-white p-4 sm:p-5 shadow-sharp text-center">
         {/* Bold, appealing, unmistakable advertisement header */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink pb-2.5">
+        <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink pb-2.5">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 border-2 border-ink bg-gold-400 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-ink shadow-sharp-sm">
               <span className="h-2 w-2 rounded-full bg-ink animate-pulse" aria-hidden="true" />
-              Sponsored Advertisement
+              SPONSORED ADVERTISEMENT
             </span>
           </div>
-          <span className="border border-ink/20 bg-ink/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink/75">
-            External Ad · Not Jacky&apos;s Work
+          <span className="border-2 border-ink/30 bg-ink px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sharp-xs">
+            EXTERNAL 728x90 AD · NOT JACKY&apos;S WORK
           </span>
         </div>
 
@@ -128,7 +128,7 @@ export function LeaderboardBanner() {
 }
 
 /**
- * Native Banner Ad:
+ * Native 3:1 Horizontal Banner Ad:
  * <script async="async" data-cfasync="false" src="https://bauval.org/21/0e2c69b4578b7cbec3d55ef76f156fed"></script>
  * <div id="container-0e2c69b4578b7cbec3d55ef76f156fed"></div>
  */
@@ -141,9 +141,18 @@ export function NativeAdBanner() {
     const container = document.getElementById('container-0e2c69b4578b7cbec3d55ef76f156fed');
     if (!container) return;
 
+    // Prevent duplicate injection
+    if (document.querySelector('script[src*="0e2c69b4578b7cbec3d55ef76f156fed"]')) {
+      if (container.children.length > 0) {
+        setAdLoaded(true);
+      }
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://bauval.org/21/0e2c69b4578b7cbec3d55ef76f156fed';
     script.async = true;
+    script.setAttribute('async', 'async');
     script.setAttribute('data-cfasync', 'false');
 
     script.onload = () => {
@@ -166,172 +175,104 @@ export function NativeAdBanner() {
       } else {
         setBlocked(true);
       }
-    }, 3500);
+    }, 3800);
 
     return () => clearTimeout(fallbackTimer);
   }, []);
 
   return (
-    <aside aria-label="Advertisement" className="container-sharp my-10 sm:my-14">
-      <div className="relative mx-auto max-w-[780px] overflow-hidden border-2 border-ink bg-white p-4 sm:p-5 shadow-sharp text-center">
+    <aside aria-label="Sponsored Advertisement" className="container-sharp my-10 sm:my-14">
+      {/* Container sized to 1080px to accommodate 3 horizontal ads side-by-side cleanly */}
+      <div className="relative mx-auto max-w-[1080px] w-full border-2 border-ink bg-white p-4 sm:p-5 shadow-sharp text-center">
         {/* Bold, appealing, unmistakable advertisement header */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink pb-2.5">
+        <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2 border-b-2 border-ink pb-2.5">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 border-2 border-ink bg-gold-400 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-ink shadow-sharp-sm">
               <span className="h-2 w-2 rounded-full bg-ink animate-pulse" aria-hidden="true" />
-              Sponsored Content
+              SPONSORED ADVERTISEMENT
             </span>
           </div>
-          <span className="border border-ink/20 bg-ink/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-ink/75">
-            External Ads · Not Jacky&apos;s Portfolio
+          <span className="border-2 border-ink/30 bg-ink px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sharp-xs">
+            EXTERNAL 3RD-PARTY ADS · NOT JACKY&apos;S WORK
           </span>
         </div>
 
-        {/* Ad container for Adsterra native banner */}
+        {/* Ad container for Adsterra 3:1 native banner */}
         <div
           ref={containerRef}
-          className={`min-h-[90px] flex items-center justify-center w-full ${
+          className={`min-h-[120px] sm:min-h-[140px] w-full flex items-center justify-center overflow-x-auto ${
             blocked && !adLoaded ? 'hidden' : 'block'
           }`}
         >
           <div id="container-0e2c69b4578b7cbec3d55ef76f156fed" className="w-full" />
         </div>
 
-        {/* Fallback when blocked */}
+        {/* Smart fallback shown when blocked by ad blocker or private browsing mode (3 horizontal promo cards) */}
         {blocked && !adLoaded && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-3.5 px-4 bg-gold-50/60 border border-ink/15 text-left">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-2 w-2 rounded-full bg-gold-500" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-700">
-                  Native Sponsor Placement
-                </span>
+          <div className="py-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left">
+              <div className="border-2 border-ink/20 bg-gold-50/50 p-4 shadow-sharp-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gold-700 block mb-1">
+                    Slot #1 · Sponsor
+                  </span>
+                  <h4 className="font-display text-sm font-bold text-ink">Creator Tools &amp; Plugins</h4>
+                  <p className="text-xs text-ink/70 mt-1">
+                    Reach active YouTubers and video editors browsing Jacky&apos;s portfolio.
+                  </p>
+                </div>
+                <a
+                  href="#contact"
+                  className="mt-3 inline-block self-start border border-ink bg-ink text-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gold-500 hover:text-ink transition-colors"
+                >
+                  Partner With Jacky
+                </a>
               </div>
-              <h4 className="mt-1 font-display text-sm font-bold text-ink">
-                Promote Your Creator Brand or Tool Here
-              </h4>
-              <p className="text-xs text-ink/65 mt-0.5 max-w-[50ch]">
-                Featured in Jacky&apos;s active portfolio. Clean placement, zero popups.
-              </p>
+
+              <div className="border-2 border-ink/20 bg-white p-4 shadow-sharp-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gold-700 block mb-1">
+                    Slot #2 · Partner
+                  </span>
+                  <h4 className="font-display text-sm font-bold text-ink">Production &amp; Sound</h4>
+                  <p className="text-xs text-ink/70 mt-1">
+                    High-engagement sponsorship slot for royalty-free music, SFX, and asset libraries.
+                  </p>
+                </div>
+                <a
+                  href="#contact"
+                  className="mt-3 inline-block self-start border border-ink bg-gold-400 text-ink px-3 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-ink hover:text-white transition-colors"
+                >
+                  Book Ad Space
+                </a>
+              </div>
+
+              <div className="border-2 border-ink/20 bg-gold-50/50 p-4 shadow-sharp-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gold-700 block mb-1">
+                    Slot #3 · Featured
+                  </span>
+                  <h4 className="font-display text-sm font-bold text-ink">High Retention Edits</h4>
+                  <p className="text-xs text-ink/70 mt-1">
+                    Need custom edits for your channel? 100% hand-crafted pacing and motion graphics.
+                  </p>
+                </div>
+                <a
+                  href="#contact"
+                  className="mt-3 inline-block self-start border border-ink bg-ink text-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider hover:bg-gold-500 hover:text-ink transition-colors"
+                >
+                  Hire Jacky
+                </a>
+              </div>
             </div>
-            <a
-              href="#contact"
-              className="btn-sharp shrink-0 border-ink bg-ink text-white hover:bg-gold-500 hover:text-ink text-xs px-4 py-2 shadow-sharp-sm"
-            >
-              Partner With Jacky
-            </a>
           </div>
         )}
 
-        <p className="mt-2.5 border-t border-ink/10 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink/40">
+        {/* Clear disclaimer note so visitors never confuse external ads with Jacky's edits */}
+        <p className="mt-3 border-t border-ink/10 pt-2 text-[10px] font-semibold uppercase tracking-wider text-ink/45">
           Third-party sponsor notice. All video editing &amp; creative services on this site are original work by Jacky.
         </p>
       </div>
     </aside>
-  );
-}
-
-/**
- * Left & Right Skyscraper Side Banners for Desktop (>= 1360px)
- */
-export function SideBanners() {
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
-
-  return (
-    <>
-      {/* Left Sidebar Banner */}
-      {leftOpen && (
-        <aside
-          aria-label="Left Sponsor"
-          className="fixed left-3 top-28 z-40 hidden min-[1360px]:flex flex-col w-[124px] 2xl:w-[136px] border-2 border-ink bg-white p-2.5 shadow-sharp-sm animate-lb-fade"
-        >
-          <div className="flex items-center justify-between border-b border-ink/10 pb-1.5 mb-2">
-            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-gold-600">
-              Sponsor
-            </span>
-            <button
-              type="button"
-              onClick={() => setLeftOpen(false)}
-              className="text-ink/40 hover:text-ink text-[11px] leading-none"
-              title="Dismiss ad"
-              aria-label="Dismiss ad"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="flex flex-col items-center justify-center py-6 text-center bg-gold-50/50 border border-ink/10">
-            <span className="h-7 w-7 rounded-full border border-ink bg-white flex items-center justify-center font-display font-bold text-xs text-gold-600 mb-2 shadow-sm">
-              J
-            </span>
-            <span className="font-display text-[11px] font-bold text-ink leading-tight">
-              Jacky Edits
-            </span>
-            <span className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider">
-              100% Hand-Cut
-            </span>
-            <span className="mt-4 inline-block border border-ink bg-ink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider hover:bg-gold-500 hover:text-ink">
-              Hire Me
-            </span>
-          </div>
-
-          <a
-            href="#contact"
-            className="mt-2 text-[9px] font-bold uppercase tracking-[0.16em] text-ink/50 hover:text-ink text-center"
-          >
-            Ad Space
-          </a>
-        </aside>
-      )}
-
-      {/* Right Sidebar Banner */}
-      {rightOpen && (
-        <aside
-          aria-label="Right Sponsor"
-          className="fixed right-3 top-28 z-40 hidden min-[1360px]:flex flex-col w-[124px] 2xl:w-[136px] border-2 border-ink bg-white p-2.5 shadow-sharp-sm animate-lb-fade"
-        >
-          <div className="flex items-center justify-between border-b border-ink/10 pb-1.5 mb-2">
-            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-gold-600">
-              Partner
-            </span>
-            <button
-              type="button"
-              onClick={() => setRightOpen(false)}
-              className="text-ink/40 hover:text-ink text-[11px] leading-none"
-              title="Dismiss ad"
-              aria-label="Dismiss ad"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="flex flex-col items-center justify-center py-6 text-center bg-gold-50/50 border border-ink/10">
-            <span className="h-7 w-7 rounded-full border border-ink bg-white flex items-center justify-center font-display font-bold text-xs text-gold-600 mb-2 shadow-sm">
-              ★
-            </span>
-            <span className="font-display text-[11px] font-bold text-ink leading-tight">
-              Fast Cuts
-            </span>
-            <span className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider">
-              TikTok · Reels
-            </span>
-            <a
-              href="#work"
-              className="mt-4 inline-block border border-ink bg-gold-400 text-ink px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider hover:bg-ink hover:text-white"
-            >
-              Samples
-            </a>
-          </div>
-
-          <a
-            href="#contact"
-            className="mt-2 text-[9px] font-bold uppercase tracking-[0.16em] text-ink/50 hover:text-ink text-center"
-          >
-            Promote Here
-          </a>
-        </aside>
-      )}
-    </>
   );
 }
