@@ -119,7 +119,7 @@ export default function Contact() {
               </p>
             </div>
             <a
-              href="https://www.instagram.com/"
+              href="https://www.instagram.com/jackys_editz_services?psln=aTFkc2R3MzRqMXZq"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-sharp border-gold-400 bg-gold-400 text-ink transition-colors hover:bg-white"
